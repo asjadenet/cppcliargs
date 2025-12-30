@@ -133,9 +133,9 @@ public:
         // Convert to span for modern C++ iteration
         std::span<const char* const> args(argv, argc);
         
-        // Skip program name (args[0])
-        for (size_t i = 1; i < args.size(); ++i) {
-            std::string_view arg(args[i]);
+        // Skip program name - iterate from args.begin() + 1
+        for (auto it = args.begin() + 1; it != args.end(); ++it) {
+            std::string_view arg(*it);
             
             // Skip non-arguments
             if (arg.empty() || arg[0] != '-') {
@@ -223,15 +223,15 @@ public:
                 if (std::holds_alternative<bool>(defaults_.at(arg_char))) {
                     if (required_.contains(arg_char)) {
                         // Required bool must have explicit value
-                        if (i + 1 >= args.size()) {
+                        if (it + 1 >= args.end()) {
                             return std::unexpected(ParseErrorInfo{
                                 ParseError::MissingValue,
                                 arg_char,
                                 "required boolean needs explicit value"
                             });
                         }
-                        ++i;
-                        std::string_view bool_value(args[i]);
+                        ++it;
+                        std::string_view bool_value(*it);
                         auto parse_result = parse_value(arg_char, bool_value);
                         if (!parse_result) {
                             return std::unexpected(parse_result.error());
@@ -243,15 +243,15 @@ public:
                     }
                 } else {
                     // Non-bool types need a value
-                    if (i + 1 >= args.size()) {
+                    if (it + 1 >= args.end()) {
                         return std::unexpected(ParseErrorInfo{
                             ParseError::MissingValue,
                             arg_char,
                             ""
                         });
                     }
-                    ++i;
-                    std::string_view next_value(args[i]);
+                    ++it;
+                    std::string_view next_value(*it);
                     auto parse_result = parse_value(arg_char, next_value);
                     if (!parse_result) {
                         return std::unexpected(parse_result.error());
@@ -279,8 +279,9 @@ public:
     bool has_help_request(int argc, const char* argv[]) const {
         std::span<const char* const> args(argv, argc);
         
-        for (size_t i = 1; i < args.size(); ++i) {
-            std::string_view arg(args[i]);
+        // Skip program name - use range-based for loop with subspan
+        for (const char* arg_ptr : args.subspan(1)) {
+            std::string_view arg(arg_ptr);
             
             // Check for -h
             if (arg == "-h") {
