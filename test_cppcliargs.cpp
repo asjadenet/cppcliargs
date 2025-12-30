@@ -406,10 +406,10 @@ void test_constexpr_configuration() {
 
     ctx.test("All error messages are constexpr", [] {
         using namespace cppcliargs;
-        constexpr auto msg1 = error_message(ParseError::MissingRequiredArgument);
-        constexpr auto msg2 = error_message(ParseError::MissingValue);
-        constexpr auto msg3 = error_message(ParseError::InvalidBooleanValue);
-        constexpr auto msg4 = error_message(ParseError::InvalidIntegerValue);
+        [[maybe_unused]] constexpr auto msg1 = error_message(ParseError::MissingRequiredArgument);
+        [[maybe_unused]] constexpr auto msg2 = error_message(ParseError::MissingValue);
+        [[maybe_unused]] constexpr auto msg3 = error_message(ParseError::InvalidBooleanValue);
+        [[maybe_unused]] constexpr auto msg4 = error_message(ParseError::InvalidIntegerValue);
         
         assert(msg1 == "Missing required argument");
         assert(msg2 == "Missing value for argument");
@@ -532,9 +532,9 @@ void test_help_generation() {
         std::string help_text = p.generate_help();
         
         // Find positions
-        size_t pos_a = help_text.find("-a");
-        size_t pos_m = help_text.find("-m");
-        size_t pos_z = help_text.find("-z");
+        [[maybe_unused]] size_t pos_a = help_text.find("-a");
+        [[maybe_unused]] size_t pos_m = help_text.find("-m");
+        [[maybe_unused]] size_t pos_z = help_text.find("-z");
         
         // Verify sorted order
         assert(pos_a != std::string::npos);
@@ -602,7 +602,7 @@ void test_convenience_api() {
         
         assert(result.has_value());
         // Clean syntax - no std::get!
-        int n = result.value().get<int>('n');
+        [[maybe_unused]] int n = result.value().get<int>('n');
         assert(n == 100);
     });
 
@@ -615,7 +615,7 @@ void test_convenience_api() {
         auto result = p(args.argc(), args.argv());
         
         assert(result.has_value());
-        bool verbose = result.value().get<bool>('v');
+        [[maybe_unused]] bool verbose = result.value().get<bool>('v');
         assert(verbose == true);
     });
 
@@ -643,7 +643,7 @@ void test_convenience_api() {
         assert(result.has_value());
         
         // Can iterate directly over result.value()
-        int count = 0;
+        [[maybe_unused]] int count = 0;
         for ([[maybe_unused]] const auto& [key, value] : result.value()) {
             count++;
         }
@@ -661,7 +661,7 @@ void test_convenience_api() {
         assert(result.has_value());
         
         // Can use subscript operator
-        const auto& value = result.value()['n'];
+        [[maybe_unused]] const auto& value = result.value()['n'];
         assert(std::get<int>(value) == 42);
     });
 
@@ -676,7 +676,7 @@ void test_convenience_api() {
         assert(result.has_value());
         
         // Can get underlying ArgMap
-        const cppcliargs::ArgMap& map = result.value().values();
+        [[maybe_unused]] const cppcliargs::ArgMap& map = result.value().values();
         assert(map.size() == 3); // n, v, and auto-added h
     });
 
