@@ -21,11 +21,12 @@ jobs:
             cpp_compiler: g++-13
             c_compiler: gcc-13
             
-          # Ubuntu with Clang 18 (C++23 support) - Noble has 18, not 16
+          # Ubuntu with Clang 18 + libc++ (C++23 support with std::expected)
           - os: ubuntu-latest
             compiler: clang
             cpp_compiler: clang++-18
             c_compiler: clang-18
+            extra_flags: "-stdlib=libc++"
             
           # Windows with MSVC (latest)
           - os: windows-latest
@@ -49,15 +50,20 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y g++-13
         
-    - name: Install Clang 18 (Ubuntu)
+    - name: Install Clang 18 + libc++ (Ubuntu)
       if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
       run: |
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         sudo ./llvm.sh 18
-        sudo apt-get install -y clang++-18
+        sudo apt-get install -y clang++-18 libc++-18-dev libc++abi-18-dev
 
-    - name: Configure CMake
+    - name: Configure CMake (Unix with extra flags)
+      if: matrix.extra_flags != ''
+      run: cmake -B build -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="${{ matrix.extra_flags }}" -DCPPCLIARGS_BUILD_EXAMPLES=ON -DCPPCLIARGS_BUILD_TESTS=ON
+
+    - name: Configure CMake (Standard)
+      if: matrix.extra_flags == ''
       run: cmake -B build -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} -DCMAKE_BUILD_TYPE=Release -DCPPCLIARGS_BUILD_EXAMPLES=ON -DCPPCLIARGS_BUILD_TESTS=ON
 
     - name: Build
