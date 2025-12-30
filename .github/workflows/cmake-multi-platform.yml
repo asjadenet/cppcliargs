@@ -21,11 +21,11 @@ jobs:
             cpp_compiler: g++-13
             c_compiler: gcc-13
             
-          # Ubuntu with Clang 16 (C++23 support)
+          # Ubuntu with Clang 18 (C++23 support) - Noble has 18, not 16
           - os: ubuntu-latest
             compiler: clang
-            cpp_compiler: clang++-16
-            c_compiler: clang-16
+            cpp_compiler: clang++-18
+            c_compiler: clang-18
             
           # Windows with MSVC (latest)
           - os: windows-latest
@@ -49,22 +49,16 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y g++-13
         
-    - name: Install Clang 16 (Ubuntu)
+    - name: Install Clang 18 (Ubuntu)
       if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
       run: |
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
-        sudo ./llvm.sh 16
-        sudo apt-get install -y clang++-16
+        sudo ./llvm.sh 18
+        sudo apt-get install -y clang++-18
 
     - name: Configure CMake
-      run: |
-        cmake -B build \
-          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCPPCLIARGS_BUILD_EXAMPLES=ON \
-          -DCPPCLIARGS_BUILD_TESTS=ON
+      run: cmake -B build -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} -DCMAKE_BUILD_TYPE=Release -DCPPCLIARGS_BUILD_EXAMPLES=ON -DCPPCLIARGS_BUILD_TESTS=ON
 
     - name: Build
       run: cmake --build build --config Release
