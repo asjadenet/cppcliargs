@@ -13,7 +13,6 @@ A lightweight, header-only command line argument parser with modern C++ features
 - 💎 **Clean API** - Template-based `get<T>()` accessors
 - 🧪 **Well tested** - 53 comprehensive tests
 
-```markdown
 # cppcliargs
 
 [![CMake Multi-Platform](https://github.com/asjadenet/cppcliargs/actions/workflows/cmake-multi-platform.yml/badge.svg)](https://github.com/asjadenet/cppcliargs/actions/workflows/cmake-multi-platform.yml)
@@ -21,7 +20,6 @@ A lightweight, header-only command line argument parser with modern C++ features
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 Modern C++23 command-line argument parser - type-safe, exception-free, header-only.
-```
 
 ## Quick Start
 
