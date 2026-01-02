@@ -423,30 +423,12 @@ g++ -std=c++23 minimal_sum.cpp -o minimal_sum
 ./minimal_sum -a 10 -b 20
 ```
 
-## Contributing
-
-Contributions welcome! Please:
-1. Follow the existing code style
-2. Add tests for new features
-3. Update documentation
-4. Ensure all examples compile
-
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
-
-## Author
-
-**Tiit Jõeleht** - [asjadenet](https://github.com/asjadenet)
 
 ## Acknowledgments
 
 - Uses C++23 features: `std::expected`, `std::span`, designated initializers
 - Inspired by modern CLI parsing libraries
 - Built for manufacturing and SAP integration workflows
-
-## See Also
-
-- [API Reference](API_REFERENCE.md) - Complete API documentation
-- [Examples](examples/) - More usage examples
-- [CMake Integration](cmake/) - CMake configuration files
