@@ -2,6 +2,7 @@
 
 Modern C++23 command line argument parser - simple, type-safe, and powerful.
 
+[![CMake Multi-Platform](https://github.com/asjadenet/cppcliargs/actions/workflows/cmake-multi-platform.yml/badge.svg)](https://github.com/asjadenet/cppcliargs/actions/workflows/cmake-multi-platform.yml)
 [![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://en.cppreference.com/w/cpp/23)
 [![Header-only](https://img.shields.io/badge/header--only-yes-green.svg)](cppcliargs.hpp)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
