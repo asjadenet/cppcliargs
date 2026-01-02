@@ -17,21 +17,21 @@ Modern C++23 command line argument parser with automatic help and error reportin
 
 int main(int argc, const char* argv[]) {
     // Simple: just defaults and argc/argv
-    cppcliargs::parser p({{'a', 0}, {'b', 0}}, argc, argv);
+    const cppcliargs::parser p({{'a', 0}, {'b', 0}}, argc, argv);
     
     // Help printed automatically if -h is used
     if (p.help_requested()) return 0;
     
     // Parse
-    auto result = p();
+    const auto result = p();
     if (!result) {
         p.report_error(result);  // Auto-prints error + help
         return 1;
     }
     
     // Use values
-    int a = result.value().get<int>('a');
-    int b = result.value().get<int>('b');
+    const int a = result.value().get<int>('a');
+    const int b = result.value().get<int>('b');
     std::cout << a + b << "\n";
 }
 ```
@@ -53,7 +53,7 @@ Creates a parser with just defaults and command line arguments.
 
 **Example:**
 ```cpp
-cppcliargs::parser p({{'a', 0}, {'b', 0}}, argc, argv);
+const cppcliargs::parser p({{'a', 0}, {'b', 0}}, argc, argv);
 ```
 
 **Behavior:**
@@ -76,7 +76,7 @@ Creates a parser with full configuration.
 
 **Example:**
 ```cpp
-cppcliargs::Config config{
+const cppcliargs::Config config{
     .defaults = {{'v', false}, {'n', 0}},
     .long_names = {{'v', "verbose"}, {'n', "count"}},
     .required = {'n'},
@@ -86,7 +86,7 @@ cppcliargs::Config config{
     }
 };
 
-cppcliargs::parser p(config, argc, argv);
+const cppcliargs::parser p(config, argc, argv);
 ```
 
 ## Methods
@@ -103,7 +103,7 @@ Parses command line arguments using the argc/argv provided to constructor.
 
 **Example:**
 ```cpp
-auto result = p();
+const auto result = p();
 if (result) {
     // Success - use result.value()
 } else {
@@ -149,7 +149,7 @@ Usage: ./program [OPTIONS]
 
 **Example:**
 ```cpp
-auto result = p();
+const auto result = p();
 if (!result) {
     p.report_error(result);
     return 1;
@@ -171,7 +171,7 @@ Generates help text string (rarely needed - use `report_error()` instead).
 
 **Example:**
 ```cpp
-std::string help = p.generate_help("myapp");
+const std::string help = p.generate_help("myapp");
 std::cout << help;
 ```
 
@@ -193,7 +193,7 @@ Map of argument characters to their values.
 
 **Example:**
 ```cpp
-cppcliargs::ArgMap defaults{
+const cppcliargs::ArgMap defaults{
     {'n', 0},           // int
     {'v', false},       // bool
     {'f', "out.txt"}    // string
@@ -221,7 +221,7 @@ Configuration for the parser.
 
 **Example:**
 ```cpp
-cppcliargs::Config config{
+const cppcliargs::Config config{
     .defaults = {
         {'v', false},
         {'n', 0},
@@ -251,15 +251,15 @@ Result of parsing - either success with values or error.
 
 **Usage:**
 ```cpp
-auto result = p();
+const auto result = p();
 
 if (result) {
     // Success
-    auto values = result.value();
-    int n = values.get<int>('n');
+    const auto& values = result.value();
+    const int n = values.get<int>('n');
 } else {
     // Error
-    auto error = result.error();
+    const auto& error = result.error();
     std::cerr << error.to_string() << "\n";
 }
 ```
@@ -285,11 +285,11 @@ Container for successfully parsed values.
 
 **Example:**
 ```cpp
-auto values = result.value();
+const auto& values = result.value();
 
-int n = values.get<int>('n');
-bool v = values.get<bool>('v');
-std::string f = values.get<std::string>('f');
+const int n = values.get<int>('n');
+const bool v = values.get<bool>('v');
+const auto f = values.get<std::string>('f');
 ```
 
 ### ParseErrorInfo
@@ -309,7 +309,7 @@ Error information from failed parsing.
 **Example:**
 ```cpp
 if (!result) {
-    auto error = result.error();
+    const auto& error = result.error();
     std::cerr << error.to_string() << "\n";
     // Output: "Invalid integer value for '-a': bad"
 }
@@ -341,18 +341,18 @@ Error types that can occur during parsing.
 #include <iostream>
 
 int main(int argc, const char* argv[]) {
-    cppcliargs::parser p({{'a', 0}, {'b', 0}}, argc, argv);
+    const cppcliargs::parser p({{'a', 0}, {'b', 0}}, argc, argv);
     
     if (p.help_requested()) return 0;
     
-    auto result = p();
+    const auto result = p();
     if (!result) {
         p.report_error(result);
         return 1;
     }
     
-    int a = result.value().get<int>('a');
-    int b = result.value().get<int>('b');
+    const int a = result.value().get<int>('a');
+    const int b = result.value().get<int>('b');
     std::cout << a << " + " << b << " = " << (a + b) << "\n";
 }
 ```
@@ -364,7 +364,7 @@ int main(int argc, const char* argv[]) {
 #include <iostream>
 
 int main(int argc, const char* argv[]) {
-    cppcliargs::Config config{
+    const cppcliargs::Config config{
         .defaults = {
             {'v', false},
             {'n', 0},
@@ -386,23 +386,23 @@ int main(int argc, const char* argv[]) {
         }
     };
     
-    cppcliargs::parser p(config, argc, argv);
+    const cppcliargs::parser p(config, argc, argv);
     
     if (p.help_requested()) {
         return 0;
     }
     
-    auto result = p();
+    const auto result = p();
     if (!result) {
         p.report_error(result);
         return 1;
     }
     
-    auto values = result.value();
-    bool verbose = values.get<bool>('v');
-    int count = values.get<int>('n');
-    std::string file = values.get<std::string>('f');
-    int threads = values.get<int>('t');
+    const auto& values = result.value();
+    const bool verbose = values.get<bool>('v');
+    const int count = values.get<int>('n');
+    const auto file = values.get<std::string>('f');
+    const int threads = values.get<int>('t');
     
     if (verbose) {
         std::cout << "Processing " << file << " with " << count 
@@ -451,28 +451,28 @@ int main(int argc, const char* argv[]) {
 
 2. **Always check parsing result:**
    ```cpp
-   auto result = p();
+   const auto result = p();
    if (!result) {
        p.report_error(result);
        return 1;
    }
    ```
 
-3. **Use Config for complex apps:**
+3. **Use const everywhere:**
    ```cpp
-   cppcliargs::Config config{
+   const auto& values = result.value();
+   const int a = values.get<int>('a');
+   const int b = values.get<int>('b');
+   ```
+
+4. **Use Config for complex apps:**
+   ```cpp
+   const cppcliargs::Config config{
        .defaults = {...},
        .long_names = {...},
        .required = {...},
        .help = {...}
    };
-   ```
-
-4. **Store parsed values:**
-   ```cpp
-   auto values = result.value();  // Once
-   int a = values.get<int>('a');
-   int b = values.get<int>('b');
    ```
 
 ## Features
@@ -494,3 +494,4 @@ int main(int argc, const char* argv[]) {
 - `argc` and `argv` are stored in the constructor
 - Parsing uses stored `argc`/`argv` via `operator()()`
 - Error reporting includes help text automatically
+- Use `const` everywhere for best practices

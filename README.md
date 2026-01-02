@@ -66,9 +66,15 @@ Just copy `cppcliargs.hpp` to your project:
 wget https://raw.githubusercontent.com/asjadenet/cppcliargs/main/cppcliargs.hpp
 ```
 
-### CMake
+### CMake - FetchContent (Recommended)
+
+Add to your `CMakeLists.txt`:
 
 ```cmake
+cmake_minimum_required(VERSION 3.20)
+project(myapp)
+
+# Fetch cppcliargs
 include(FetchContent)
 FetchContent_Declare(
     cppcliargs
@@ -77,7 +83,52 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cppcliargs)
 
-target_link_libraries(your_target PRIVATE cppcliargs::cppcliargs)
+# Your executable
+add_executable(myapp main.cpp)
+target_link_libraries(myapp PRIVATE cppcliargs::cppcliargs)
+target_compile_features(myapp PRIVATE cxx_std_23)
+```
+
+### CMake - Installed Package
+
+If you've installed cppcliargs system-wide:
+
+```cmake
+cmake_minimum_required(VERSION 3.20)
+project(myapp)
+
+# Find installed cppcliargs
+find_package(cppcliargs REQUIRED)
+
+# Your executable
+add_executable(myapp main.cpp)
+target_link_libraries(myapp PRIVATE cppcliargs::cppcliargs)
+target_compile_features(myapp PRIVATE cxx_std_23)
+```
+
+**Install cppcliargs:**
+```bash
+cd cppcliargs
+mkdir build && cd build
+cmake ..
+sudo cmake --install .
+```
+
+### CMake - Subdirectory
+
+If cppcliargs is in your project:
+
+```cmake
+cmake_minimum_required(VERSION 3.20)
+project(myapp)
+
+# Add cppcliargs subdirectory
+add_subdirectory(external/cppcliargs)
+
+# Your executable
+add_executable(myapp main.cpp)
+target_link_libraries(myapp PRIVATE cppcliargs::cppcliargs)
+target_compile_features(myapp PRIVATE cxx_std_23)
 ```
 
 ## Examples
