@@ -2,7 +2,7 @@
 #include <iostream>
 
 int main(int argc, const char* argv[]) {
-    cppcliargs::Config config{
+    const cppcliargs::Config config{
         .defaults = {
             {'n', 10},
             {'v', false}
@@ -16,21 +16,21 @@ int main(int argc, const char* argv[]) {
             {'v', "Enable verbose output"}
         }
     };
-    
-    cppcliargs::parser p(config, argc, argv);
+
+    const cppcliargs::parser p(config, argc, argv);
     
     if (p.help_requested()) {
         return 0;
     }
-    
-    auto result = p();
+
+    const auto result = p();
     if (!result) {
         p.report_error(result);
         return 1;
     }
-    
-    int count = result.value().get<int>('n');
-    bool verbose = result.value().get<bool>('v');
+
+    const int count = result.value().get<int>('n');
+    const bool verbose = result.value().get<bool>('v');
     
     for (int i = 1; i <= count; ++i) {
         if (verbose) {

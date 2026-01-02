@@ -3,7 +3,7 @@
 #include <fstream>
 
 int main(int argc, const char* argv[]) {
-    cppcliargs::Config config{
+    const cppcliargs::Config config{
         .defaults = {
             {'n', 5},
             {'f', "input.txt"},
@@ -25,13 +25,13 @@ int main(int argc, const char* argv[]) {
         }
     };
     
-    cppcliargs::parser p(config, argc, argv);
+    const cppcliargs::parser p(config, argc, argv);
     
     if (p.help_requested()) {
         return 0;
     }
     
-    auto result = p();
+    const auto result = p();
     if (!result) {
         p.report_error(result);
         return 1;
@@ -40,9 +40,9 @@ int main(int argc, const char* argv[]) {
     const auto& values = result.value();
     
     int repeat = values.get<int>('n');
-    std::string input_file = values.get<std::string>('f');
-    std::string output_file = values.get<std::string>('o');
-    bool verbose = values.get<bool>('v');
+    const auto input_file = values.get<std::string>('f');
+    const auto output_file = values.get<std::string>('o');
+    const bool verbose = values.get<bool>('v');
     
     if (verbose) {
         std::cout << "Processing configuration:\n";

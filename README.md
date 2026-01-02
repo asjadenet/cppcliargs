@@ -25,18 +25,18 @@ Modern C++23 command line argument parser - simple, type-safe, and powerful.
 #include <iostream>
 
 int main(int argc, const char* argv[]) {
-    cppcliargs::parser p({{'a', 0}, {'b', 0}}, argc, argv);
+    const cppcliargs::parser p({{'a', 0}, {'b', 0}}, argc, argv);
     
     if (p.help_requested()) return 0;
     
-    auto result = p();
+    const auto result = p();
     if (!result) {
         p.report_error(result);
         return 1;
     }
     
-    int a = result.value().get<int>('a');
-    int b = result.value().get<int>('b');
+    const int a = result.value().get<int>('a');
+    const int b = result.value().get<int>('b');
     std::cout << a + b << "\n";
 }
 ```
@@ -89,18 +89,18 @@ target_link_libraries(your_target PRIVATE cppcliargs::cppcliargs)
 #include <iostream>
 
 int main(int argc, const char* argv[]) {
-    cppcliargs::parser p({{'a', 0}, {'b', 0}}, argc, argv);
+    const cppcliargs::parser p({{'a', 0}, {'b', 0}}, argc, argv);
     
     if (p.help_requested()) return 0;
     
-    auto result = p();
+    const auto result = p();
     if (!result) {
         p.report_error(result);
         return 1;
     }
     
-    int a = result.value().get<int>('a');
-    int b = result.value().get<int>('b');
+    const int a = result.value().get<int>('a');
+    const int b = result.value().get<int>('b');
     std::cout << a + b << "\n";
 }
 ```
@@ -112,7 +112,7 @@ int main(int argc, const char* argv[]) {
 #include <iostream>
 
 int main(int argc, const char* argv[]) {
-    cppcliargs::Config config{
+    const cppcliargs::Config config{
         .defaults = {
             {'v', false},
             {'n', 0},
@@ -134,21 +134,21 @@ int main(int argc, const char* argv[]) {
         }
     };
     
-    cppcliargs::parser p(config, argc, argv);
+    const cppcliargs::parser p(config, argc, argv);
     
     if (p.help_requested()) return 0;
     
-    auto result = p();
+    const auto result = p();
     if (!result) {
         p.report_error(result);
         return 1;
     }
     
-    auto values = result.value();
-    bool verbose = values.get<bool>('v');
-    int count = values.get<int>('n');
-    std::string file = values.get<std::string>('f');
-    int threads = values.get<int>('t');
+    const auto& values = result.value();
+    const bool verbose = values.get<bool>('v');
+    const int count = values.get<int>('n');
+    const auto file = values.get<std::string>('f');
+    const int threads = values.get<int>('t');
     
     if (verbose) {
         std::cout << "Processing " << file << " with " << count 
@@ -253,7 +253,7 @@ enum class ParseError {
 Every parser gets `-h` and `--help` automatically:
 
 ```cpp
-cppcliargs::parser p({{'a', 0}}, argc, argv);
+const cppcliargs::parser p({{'a', 0}}, argc, argv);
 
 if (p.help_requested()) return 0;  // Help already printed!
 ```
@@ -294,7 +294,7 @@ Usage: ./app [OPTIONS]
 ### Required Arguments
 
 ```cpp
-cppcliargs::Config config{
+const cppcliargs::Config config{
     .defaults = {{'n', 0}, {'f', ""}},
     .required = {'n', 'f'}
 };
@@ -322,7 +322,7 @@ Both forms work:
 ### Accessing All Values
 
 ```cpp
-auto values = result.value();
+const auto& values = result.value();
 
 // Iterate over all arguments
 for (const auto& [key, value] : values) {
@@ -335,10 +335,10 @@ for (const auto& [key, value] : values) {
 ### Boolean Flags
 
 ```cpp
-cppcliargs::parser p({{'v', false}}, argc, argv);
+const cppcliargs::parser p({{'v', false}}, argc, argv);
 
-auto result = p();
-bool verbose = result.value().get<bool>('v');
+const auto result = p();
+const bool verbose = result.value().get<bool>('v');
 
 // Usage: ./app -v  (sets verbose to true)
 ```
@@ -346,10 +346,10 @@ bool verbose = result.value().get<bool>('v');
 ### String Arguments
 
 ```cpp
-cppcliargs::parser p({{'f', "default.txt"}}, argc, argv);
+const cppcliargs::parser p({{'f', "default.txt"}}, argc, argv);
 
-auto result = p();
-std::string file = result.value().get<std::string>('f');
+const auto result = p();
+const auto file = result.value().get<std::string>('f');
 
 // Usage: ./app -f input.txt
 ```
@@ -363,23 +363,23 @@ std::string file = result.value().get<std::string>('f');
 
 2. **Always check parsing result:**
    ```cpp
-   auto result = p();
+   const auto result = p();
    if (!result) {
        p.report_error(result);
        return 1;
    }
    ```
 
-3. **Store values once:**
+3. **Use const everywhere:**
    ```cpp
-   auto values = result.value();  // Once
-   int a = values.get<int>('a');
-   int b = values.get<int>('b');
+   const auto& values = result.value();
+   const int a = values.get<int>('a');
+   const int b = values.get<int>('b');
    ```
 
 4. **Use Config for complex apps:**
    ```cpp
-   cppcliargs::Config config{
+   const cppcliargs::Config config{
        .defaults = {...},
        .long_names = {...},
        .required = {...},

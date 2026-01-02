@@ -2,7 +2,7 @@
 #include <iostream>
 
 int main(int argc, const char* argv[]) {
-    cppcliargs::Config config{
+    const cppcliargs::Config config{
         .defaults = {
             {'v', false},
             {'n', 0},
@@ -24,22 +24,22 @@ int main(int argc, const char* argv[]) {
         }
     };
     
-    cppcliargs::parser p(config, argc, argv);
+    const cppcliargs::parser p(config, argc, argv);
     
     if (p.help_requested()) {
         return 0;
     }
     
-    auto result = p();
+    const auto result = p();
     if (!result) {
         p.report_error(result);
         return 1;
     }
     
-    bool verbose = result.value().get<bool>('v');
-    int count = result.value().get<int>('n');
-    std::string file = result.value().get<std::string>('f');
-    int threads = result.value().get<int>('t');
+    const bool verbose = result.value().get<bool>('v');
+    const int count = result.value().get<int>('n');
+    const auto file = result.value().get<std::string>('f');
+    const int threads = result.value().get<int>('t');
     
     if (verbose) {
         std::cout << "Processing " << file << " with " << count 
