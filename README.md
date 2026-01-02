@@ -1,25 +1,21 @@
-# cppcliargs - Modern C++23 Command Line Parser
+# cppcliargs
 
-A lightweight, header-only command line argument parser with modern C++ features.
+Modern C++23 command line argument parser - simple, type-safe, and powerful.
+
+[![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://en.cppreference.com/w/cpp/23)
+[![Header-only](https://img.shields.io/badge/header--only-yes-green.svg)](cppcliargs.hpp)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Features
 
 - ✨ **Header-only** - Just include `cppcliargs.hpp`
 - 🔒 **Type-safe** - `std::variant<int, bool, std::string>` with `std::expected`
-- 🎯 **Modern C++23** - Uses `std::expected`, `std::span`, `std::string_view`
+- 🎯 **Modern C++23** - Uses `std::expected`, designated initializers
 - 🚀 **Zero dependencies** - Only standard library
-- 📖 **Auto-generated help** - Built-in help text
-- 🎨 **Long arguments** - Both `-n` and `--name` supported
-- 💎 **Clean API** - Template-based `get<T>()` accessors
-- 🧪 **Well tested** - 53 comprehensive tests
-
-# cppcliargs
-
-[![CMake Multi-Platform](https://github.com/asjadenet/cppcliargs/actions/workflows/cmake-multi-platform.yml/badge.svg)](https://github.com/asjadenet/cppcliargs/actions/workflows/cmake-multi-platform.yml)
-[![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://en.cppreference.com/w/cpp/23)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-
-Modern C++23 command-line argument parser - type-safe, exception-free, header-only.
+- 📖 **Auto-help** - Automatically printed when `-h` is used
+- 💎 **Clean API** - Pass `argc/argv` once, use everywhere
+- 🎨 **Long arguments** - Both `-n` and `--count` supported
+- 🧪 **Type display** - Shows `[integer]`, `[boolean]`, `[string]` in help
 
 ## Quick Start
 
@@ -28,372 +24,429 @@ Modern C++23 command-line argument parser - type-safe, exception-free, header-on
 #include <iostream>
 
 int main(int argc, const char* argv[]) {
-    // Configure with designated initializers - clear and explicit!
-    cppcliargs::Config config{
-        .defaults = {
-            {'n', 20},
-            {'f', "output.txt"}  // String literals work directly!
-        },
-        .long_names = {
-            {'n', "count"}, 
-            {'f', "file"}
-        },
-        .required = {'n'},
-        .help = {
-            {'n', "Number of items to process"},
-            {'f', "Output file"}
-        }
-    };
+    cppcliargs::parser p({{'a', 0}, {'b', 0}}, argc, argv);
     
-    cppcliargs::parser p(config);
+    if (p.help_requested()) return 0;
     
-    // Check for help request
-    if (p.has_help_request(argc, argv)) {
-        std::cout << p.generate_help(argv[0]);
-        return 0;
-    }
-    
-    // Parse arguments
-    auto result = p(argc, argv);
+    auto result = p();
     if (!result) {
-        std::cerr << "Error: " << result.error().to_string() << "\n\n";
-        std::cout << p.generate_help(argv[0]);
+        p.report_error(result);
         return 1;
     }
     
-    // Clean value access
-    const auto& values = result.value();
-    int count = values.get<int>('n');
-    std::string filename = values.get<std::string>('f');
-    
-    std::cout << "Processing " << count << " items to " << filename << "\n";
-    return 0;
+    int a = result.value().get<int>('a');
+    int b = result.value().get<int>('b');
+    std::cout << a + b << "\n";
 }
 ```
 
-**Note:** String literals (`"text"`) are automatically converted to `std::string`. The `-h` / `--help` argument is added automatically!
+**Compile and run:**
+```bash
+g++ -std=c++23 example.cpp -o example
 
-## Building
+./example -a 5 -b 3
+# Output: 8
 
-### Simple Compilation (No CMake)
+./example -h
+# Shows auto-generated help with types
+
+./example -a invalid
+# ❌ Invalid integer value for '-a': invalid
+# [shows help automatically]
+```
+
+## Installation
+
+### Header-only
+
+Just copy `cppcliargs.hpp` to your project:
 
 ```bash
-# Linux/macOS
-g++ -std=c++23 -O2 your_program.cpp -o your_program
-
-# Windows
-cl /std:c++latest /EHsc /O2 your_program.cpp
+wget https://raw.githubusercontent.com/asjadenet/cppcliargs/main/cppcliargs.hpp
 ```
 
-### With CMake
+### CMake
 
-**Build examples and tests:**
-```bash
-mkdir build && cd build
-cmake ..
-cmake --build .
-ctest  # Run tests
-```
-
-**Windows:**
-```cmd
-mkdir build
-cd build
-cmake ..
-cmake --build . --config Release
-ctest -C Release
-```
-
-### Install System-Wide
-
-```bash
-mkdir build && cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local
-cmake --build .
-sudo cmake --install .
-```
-
-Then in your project:
 ```cmake
-find_package(cppcliargs 1.0 REQUIRED)
-target_link_libraries(your_app PRIVATE cppcliargs::cppcliargs)
+include(FetchContent)
+FetchContent_Declare(
+    cppcliargs
+    GIT_REPOSITORY https://github.com/asjadenet/cppcliargs.git
+    GIT_TAG main
+)
+FetchContent_MakeAvailable(cppcliargs)
+
+target_link_libraries(your_target PRIVATE cppcliargs::cppcliargs)
 ```
 
-## Usage Examples
-
-### Supported Syntax
-
-```bash
-# Short arguments
-program -n 42 -f output.txt -v
-
-# Long arguments  
-program --count 42 --file output.txt --verbose
-
-# Equals syntax
-program -n=42 --file=output.txt
-
-# Mixed
-program -n 42 --file=output.txt -v
-```
-
-### Value Access
-
-```cpp
-auto result = parser_inst(argc, argv);
-if (result) {
-    const auto& values = result.value();
-    
-    // Template-based (recommended)
-    int n = values.get<int>('n');
-    bool v = values.get<bool>('v');
-    std::string f = values.get<std::string>('f');
-    
-    // Iterate all values
-    for (const auto& [key, value] : values) {
-        // Process each argument
-    }
-}
-```
-
-### Error Handling
-
-```cpp
-auto result = parser_inst(argc, argv);
-if (!result) {
-    const auto& error = result.error();
-    std::cerr << "Error: " << error.to_string() << "\n";
-    // error.error contains the error type
-    // error.argument contains the problematic argument
-    // error.detail contains additional info
-    return 1;
-}
-```
-
-### Auto-Generated Help
-
-```cpp
-cppcliargs::parser p(args, long_names, required, help);
-std::cout << p.generate_help("myprogram");
-```
-
-Output:
-```
-Usage: myprogram [OPTIONS]
-
-Options:
-  -f, --file                  Output file (default: "output.txt")
-  -h, --help                  Show this help message
-  -n, --count                 Number of items to process (required)
-  -v, --verbose               Enable verbose output
-```
-
-## API Reference
-
-### Core Types
-
-```cpp
-cppcliargs::ArgMap              // std::map<char, std::variant<int, bool, std::string>>
-cppcliargs::Config              // Configuration struct
-cppcliargs::ParseResultValue    // Result wrapper with get<T>() methods
-cppcliargs::ParseResult         // std::expected<ParseResultValue, ParseErrorInfo>
-```
-
-### Config Struct
-
-```cpp
-struct Config {
-    ArgMap defaults;                        // Argument defaults (required)
-    std::map<char, std::string> long_names; // Long argument names (optional)
-    std::set<char> required;                // Required arguments (optional)
-    std::map<char, std::string> help;       // Help text (optional)
-    bool auto_help = true;                  // Auto-add -h/--help (optional)
-};
-```
-
-**Usage with designated initializers:**
-```cpp
-cppcliargs::Config config{
-    .defaults = {{'n', 10}},
-    .long_names = {{'n', "count"}},
-    .required = {'n'},
-    .help = {{'n', "Item count"}},
-    .auto_help = true
-};
-```
-
-### Parser Class
-
-```cpp
-// Recommended: Config struct
-cppcliargs::Config config{...};
-cppcliargs::parser p(config);
-
-// Also available: Convenience constructors
-cppcliargs::parser p(defaults);                              // Simple
-cppcliargs::parser p(defaults, long_names, required, help);  // Full
-
-// Methods:
-ParseResult operator()(int argc, const char* argv[]) const;
-bool has_help_request(int argc, const char* argv[]) const;
-std::string generate_help(const std::string& program_name) const;
-```
-
-**Note:** While convenience constructors exist for compatibility, the Config struct approach is recommended for new code as it's more explicit and type-safe.
-
-### ParseResultValue Methods
-
-```cpp
-template<typename T> T get(char key) const;     // Recommended accessor
-const ArgValue& operator[](char key) const;     // Direct access
-const ArgValue& at(char key) const;             // Bounds-checked
-const ArgMap& values() const;                   // Underlying map
-// Range-based for loop support via begin()/end()
-```
-
-## Configuration
-
-### Using Designated Initializers (Recommended)
-
-```cpp
-cppcliargs::Config config{
-    .defaults = {
-        {'n', 10},
-        {'f', "out.txt"}  // String literals work directly!
-    },
-    .long_names = {
-        {'n', "count"}
-    },
-    .required = {'n'},
-    .help = {
-        {'n', "Item count"}
-    }
-};
-
-cppcliargs::parser p(config);
-```
-
-**Benefits:**
-- ✅ Field names are explicit - no confusion about order
-- ✅ String literals automatically convert to `std::string`
-- ✅ Can skip optional fields (they use defaults)
-- ✅ Easy to read and maintain
+## Examples
 
 ### Minimal Example
 
 ```cpp
-// Only specify what you need
-cppcliargs::Config config{
-    .defaults = {{'n', 10}, {'v', false}, {'f', "data.txt"}},
-    .required = {'n'}
-};
+#include "cppcliargs.hpp"
+#include <iostream>
 
-cppcliargs::parser p(config);
+int main(int argc, const char* argv[]) {
+    cppcliargs::parser p({{'a', 0}, {'b', 0}}, argc, argv);
+    
+    if (p.help_requested()) return 0;
+    
+    auto result = p();
+    if (!result) {
+        p.report_error(result);
+        return 1;
+    }
+    
+    int a = result.value().get<int>('a');
+    int b = result.value().get<int>('b');
+    std::cout << a + b << "\n";
+}
 ```
 
-**Automatic Help:** The parser automatically adds `-h` / `--help` unless:
-- You already defined 'h' in your arguments
-- You set `.auto_help = false`
+### With Long Names and Help Text
+
+```cpp
+#include "cppcliargs.hpp"
+#include <iostream>
+
+int main(int argc, const char* argv[]) {
+    cppcliargs::Config config{
+        .defaults = {
+            {'v', false},
+            {'n', 0},
+            {'f', ""},
+            {'t', 4}
+        },
+        .long_names = {
+            {'v', "verbose"},
+            {'n', "count"},
+            {'f', "file"},
+            {'t', "threads"}
+        },
+        .required = {'n', 'f'},
+        .help = {
+            {'v', "Enable verbose output"},
+            {'n', "Number of iterations"},
+            {'f', "Input filename"},
+            {'t', "Thread count"}
+        }
+    };
+    
+    cppcliargs::parser p(config, argc, argv);
+    
+    if (p.help_requested()) return 0;
+    
+    auto result = p();
+    if (!result) {
+        p.report_error(result);
+        return 1;
+    }
+    
+    auto values = result.value();
+    bool verbose = values.get<bool>('v');
+    int count = values.get<int>('n');
+    std::string file = values.get<std::string>('f');
+    int threads = values.get<int>('t');
+    
+    if (verbose) {
+        std::cout << "Processing " << file << " with " << count 
+                  << " iterations using " << threads << " threads\n";
+    }
+}
+```
+
+**Usage:**
+```bash
+./app -n 100 -f input.txt
+./app --count 100 --file input.txt --verbose
+./app -n 100 -f input.txt -v --threads 8
+```
+
+## API Reference
+
+### Constructors
+
+```cpp
+// Simple constructor
+parser(ArgMap defaults, int argc, const char* argv[])
+
+// Full constructor with Config
+parser(Config config, int argc, const char* argv[])
+```
+
+**Behavior:**
+- Stores `argc` and `argv` for later use
+- Automatically adds `-h`/`--help` flag
+- Auto-prints help if `-h` is specified
+
+### Methods
+
+```cpp
+bool help_requested() const
+```
+Returns `true` if help was requested and printed.
+
+```cpp
+ParseResult operator()() const
+```
+Parses arguments using stored `argc`/`argv`.  
+Returns `std::expected<ParseResultValue, ParseErrorInfo>`.
+
+```cpp
+void report_error(const ParseResult& result) const
+```
+Prints error message with emoji and auto-generated help.
+
+```cpp
+std::string generate_help(const std::string& program_name = "program") const
+```
+Generates help text (rarely needed - `report_error()` calls this automatically).
+
+### Types
+
+```cpp
+// Value types
+using ArgValue = std::variant<int, bool, std::string>;
+using ArgMap = std::map<char, ArgValue>;
+
+// Configuration
+struct Config {
+    ArgMap defaults;                        // Required
+    std::map<char, std::string> long_names; // Optional
+    std::set<char> required;                // Optional
+    std::map<char, std::string> help;       // Optional
+};
+
+// Result types
+using ParseResult = std::expected<ParseResultValue, ParseErrorInfo>;
+
+// Access parsed values
+class ParseResultValue {
+    template<typename T>
+    T get(char arg) const;  // Get typed value
+    
+    const ArgMap& values() const;  // Get all values
+};
+```
+
+### Error Types
+
+```cpp
+enum class ParseError {
+    UnknownArgument,
+    MissingRequiredArgument,
+    MissingValue,
+    InvalidBooleanValue,
+    InvalidIntegerValue,
+    TypeMismatch,
+    DuplicateArgument,
+    InvalidArguments
+};
+```
+
+## Features in Detail
+
+### Automatic Help
+
+Every parser gets `-h` and `--help` automatically:
+
+```cpp
+cppcliargs::parser p({{'a', 0}}, argc, argv);
+
+if (p.help_requested()) return 0;  // Help already printed!
+```
+
+### Type Display
+
+Help shows types even without help text:
+
+```
+Usage: ./app [OPTIONS]
+
+Options:
+  -a                        [integer] (default: 0)
+  -b                        [boolean]
+  -f                        [string] (default: "")
+  -h, --help                [boolean]
+```
+
+### Error Reporting
+
+One-line error reporting with automatic help:
+
+```cpp
+if (!result) {
+    p.report_error(result);  // Prints error + help
+    return 1;
+}
+```
+
+Output:
+```
+❌ Invalid integer value for '-a': bad
+
+Usage: ./app [OPTIONS]
+...
+```
+
+### Required Arguments
+
+```cpp
+cppcliargs::Config config{
+    .defaults = {{'n', 0}, {'f', ""}},
+    .required = {'n', 'f'}
+};
+```
+
+Missing required arguments are automatically detected.
+
+### Long Argument Names
+
+```cpp
+.long_names = {
+    {'v', "verbose"},
+    {'n', "count"}
+}
+```
+
+Both forms work:
+```bash
+./app -v -n 100
+./app --verbose --count 100
+```
+
+## Advanced Usage
+
+### Accessing All Values
+
+```cpp
+auto values = result.value();
+
+// Iterate over all arguments
+for (const auto& [key, value] : values) {
+    std::cout << "Argument '" << key << "': ";
+    std::visit([](const auto& v) { std::cout << v; }, value);
+    std::cout << "\n";
+}
+```
+
+### Boolean Flags
+
+```cpp
+cppcliargs::parser p({{'v', false}}, argc, argv);
+
+auto result = p();
+bool verbose = result.value().get<bool>('v');
+
+// Usage: ./app -v  (sets verbose to true)
+```
+
+### String Arguments
+
+```cpp
+cppcliargs::parser p({{'f', "default.txt"}}, argc, argv);
+
+auto result = p();
+std::string file = result.value().get<std::string>('f');
+
+// Usage: ./app -f input.txt
+```
+
+## Best Practices
+
+1. **Always check help first:**
+   ```cpp
+   if (p.help_requested()) return 0;
+   ```
+
+2. **Always check parsing result:**
+   ```cpp
+   auto result = p();
+   if (!result) {
+       p.report_error(result);
+       return 1;
+   }
+   ```
+
+3. **Store values once:**
+   ```cpp
+   auto values = result.value();  // Once
+   int a = values.get<int>('a');
+   int b = values.get<int>('b');
+   ```
+
+4. **Use Config for complex apps:**
+   ```cpp
+   cppcliargs::Config config{
+       .defaults = {...},
+       .long_names = {...},
+       .required = {...},
+       .help = {...}
+   };
+   ```
+
+## Comparison with Other Libraries
+
+| Feature | cppcliargs | CLI11 | cxxopts | Boost.Program_options |
+|---------|------------|-------|---------|----------------------|
+| Header-only | ✅ | ✅ | ✅ | ❌ |
+| C++23 | ✅ | ❌ | ❌ | ❌ |
+| std::expected | ✅ | ❌ | ❌ | ❌ |
+| Auto-help printing | ✅ | ❌ | ❌ | ❌ |
+| Pass argc/argv once | ✅ | ❌ | ❌ | ❌ |
+| Lines of code (simple) | 10 | 12 | 15 | 18 |
+| Designated initializers | ✅ | ❌ | ❌ | ❌ |
 
 ## Requirements
 
-- **C++23 compiler:**
-  - GCC 13+
-  - Clang 16+
-  - MSVC 2022 17.8+
-- **CMake 3.20+** (optional, only for building examples/tests)
+- **C++23** compiler (GCC 13+, Clang 18+, MSVC 19.35+)
+- Standard library with `<expected>` support
 
-## Testing
+### Tested Compilers
 
-Includes 53 comprehensive tests covering:
-- Argument parsing (short/long forms)
-- Required arguments
-- Error handling
-- Type validation
-- Help generation
-- Template accessors
+- GCC 13+ on Linux
+- Clang 18+ (with libc++) on Linux
+- MSVC 19.35+ on Windows
+- Apple Clang 15+ on macOS
 
-Run tests:
+## Building Examples
+
 ```bash
-./test_cppcliargs    # After building
-```
-
-## Examples Included
-
-- `simple_example.cpp` - Basic usage
-- `modern_example.cpp` - Clean API demonstration
-- `advanced_example.cpp` - Full-featured with validation
-
-Build and run:
-```bash
+# Using CMake
+mkdir build && cd build
+cmake ..
 cmake --build .
-./simple_example --help
-./modern_example --count=42 --verbose
+
+# Manual compilation
+g++ -std=c++23 minimal_sum.cpp -o minimal_sum
+./minimal_sum -a 10 -b 20
 ```
 
-## CMake Options
+## Contributing
 
-```bash
-# Build control
--DCPPCLIARGS_BUILD_EXAMPLES=ON/OFF  # Default: ON
--DCPPCLIARGS_BUILD_TESTS=ON/OFF     # Default: ON
-
-# Installation
--DCMAKE_INSTALL_PREFIX=/path        # Install location
-
-# Build type
--DCMAKE_BUILD_TYPE=Release          # Release/Debug
-```
-
-## Troubleshooting
-
-**"C++23 not supported"**
-- Update compiler to GCC 13+, Clang 16+, or MSVC 2022 17.8+
-
-**"std::expected not found"**
-- Ensure C++23 mode: `-std=c++23` or `/std:c++latest`
-
-**"cmake directory missing"** (Windows ZIP download)
-- Ignore it - CMake auto-generates needed files
-- Or manually create: `mkdir cmake` (not required for building)
-
-**CMake can't find package after install**
-```bash
-cmake .. -Dcppcliargs_DIR=/install/path/lib/cmake/cppcliargs
-```
-
-## Integration Methods
-
-### 1. Direct Copy (Simplest)
-Just copy `cppcliargs.hpp` to your project.
-
-### 2. CMake find_package (After install)
-```cmake
-find_package(cppcliargs 1.0 REQUIRED)
-target_link_libraries(app PRIVATE cppcliargs::cppcliargs)
-```
-
-### 3. CMake FetchContent (No install)
-```cmake
-include(FetchContent)
-FetchContent_Declare(cppcliargs GIT_REPOSITORY ... GIT_TAG v1.0.0)
-FetchContent_MakeAvailable(cppcliargs)
-target_link_libraries(app PRIVATE cppcliargs::cppcliargs)
-```
-
-### 4. Git Submodule
-```cmake
-add_subdirectory(external/cppcliargs)
-target_link_libraries(app PRIVATE cppcliargs::cppcliargs)
-```
+Contributions welcome! Please:
+1. Follow the existing code style
+2. Add tests for new features
+3. Update documentation
+4. Ensure all examples compile
 
 ## License
 
-Use freely in your projects.
+MIT License - see [LICENSE](LICENSE) file for details.
 
-## Support
+## Author
 
-- Check examples for working code
-- Read API reference above
-- Run tests to verify installation
-- All features are demonstrated in example files
+**Tiit Jõeleht** - [asjadenet](https://github.com/asjadenet)
+
+## Acknowledgments
+
+- Uses C++23 features: `std::expected`, `std::span`, designated initializers
+- Inspired by modern CLI parsing libraries
+- Built for manufacturing and SAP integration workflows
+
+## See Also
+
+- [API Reference](API_REFERENCE.md) - Complete API documentation
+- [Examples](examples/) - More usage examples
+- [CMake Integration](cmake/) - CMake configuration files

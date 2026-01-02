@@ -36,6 +36,11 @@ option(CPPCLIARGS_BUILD_TESTS "Build test suite" ON)
 
 # Examples
 if(CPPCLIARGS_BUILD_EXAMPLES)
+    # Minimal example
+    add_executable(minimal_sum minimal_sum.cpp)
+    target_link_libraries(minimal_sum PRIVATE cppcliargs::cppcliargs)
+    target_compile_options(minimal_sum PRIVATE ${WARNING_FLAGS})
+
     # Simple example
     add_executable(simple_example simple_example.cpp)
     target_link_libraries(simple_example PRIVATE cppcliargs::cppcliargs)

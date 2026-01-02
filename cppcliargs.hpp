@@ -11,6 +11,7 @@
 #include <vector>
 #include <charconv>
 #include <system_error>
+#include <iostream>
 
 namespace cppcliargs {
 
@@ -22,7 +23,8 @@ enum class ParseError {
     InvalidBooleanValue,
     InvalidIntegerValue,
     TypeMismatch,
-    DuplicateArgument
+    DuplicateArgument,
+    InvalidArguments
 };
 
 // Human-readable error messages
@@ -35,6 +37,7 @@ constexpr std::string_view error_message(ParseError error) noexcept {
         case ParseError::InvalidIntegerValue: return "Invalid integer value";
         case ParseError::TypeMismatch: return "Type mismatch";
         case ParseError::DuplicateArgument: return "Duplicate argument";
+        case ParseError::InvalidArguments: return "Invalid arguments";
     }
     return "Unknown error";
 }
@@ -96,42 +99,58 @@ struct Config {
     std::map<char, std::string> long_names = {};
     std::set<char> required = {};
     std::map<char, std::string> help = {};
-    bool auto_help = true;
 };
 
 class parser {
 public:
-    // Primary constructor with Config struct
-    explicit parser(Config config) noexcept
+    // Constructor with defaults and argc/argv
+    parser(ArgMap defaults, int argc, const char* argv[]) noexcept
+        : defaults_(std::move(defaults))
+        , argc_(argc)
+        , argv_(argv)
+    {
+        // Always add -h for help if not present
+        if (!defaults_.contains('h')) {
+            defaults_['h'] = false;
+            long_names_['h'] = "help";
+        }
+        
+        // Auto-print help if requested
+        if (has_help_request(argc, argv)) {
+            std::cout << generate_help(argv[0]);
+            help_was_requested_ = true;
+        }
+    }
+    
+    // Constructor with full Config and argc/argv
+    parser(Config config, int argc, const char* argv[]) noexcept
         : defaults_(std::move(config.defaults))
         , long_names_(std::move(config.long_names))
         , required_(std::move(config.required))
         , help_(std::move(config.help))
+        , argc_(argc)
+        , argv_(argv)
     {
-        // Automatically add help argument if enabled and not already present
-        if (config.auto_help && !defaults_.contains('h')) {
+        // Always add -h for help if not present
+        if (!defaults_.contains('h')) {
             defaults_['h'] = false;
             long_names_['h'] = "help";
-            help_['h'] = "Show this help message";
+        }
+        
+        // Auto-print help if requested
+        if (has_help_request(argc, argv)) {
+            std::cout << generate_help(argv[0]);
+            help_was_requested_ = true;
         }
     }
-    
-    // Convenience constructor for full parameter list
-    parser(const ArgMap& defaults,
-           const std::map<char, std::string>& long_names,
-           const std::set<char>& required = {},
-           const std::map<char, std::string>& help = {},
-           bool auto_help = true) noexcept
-        : parser(Config{defaults, long_names, required, help, auto_help})
-    {}
 
-    // Parse command line arguments
-    ParseResult operator()(int argc, const char* argv[]) const {
+    // Parse command line arguments using stored argc/argv
+    ParseResult operator()() const {
         ArgMap result = defaults_;
         std::set<char> seen_args;
 
         // Convert to span for modern C++ iteration
-        std::span<const char* const> args(argv, argc);
+        std::span<const char* const> args(argv_, argc_);
         
         // Skip program name - iterate from args.begin() + 1
         for (auto it = args.begin() + 1; it != args.end(); ++it) {
@@ -274,8 +293,22 @@ public:
 
         return ParseResultValue(std::move(result));
     }
+    
+    // Check if help was requested (simpler name)
+    bool help_requested() const {
+        return help_was_requested_;
+    }
+    
+    // NEW: Report error with auto-generated help
+    void report_error(const ParseResult& result) const {
+        if (!result) {
+            std::cerr << "❌ " << result.error().to_string() << "\n\n";
+            std::cout << generate_help(argv_ ? argv_[0] : "program");
+        }
+    }
 
-    // Check if help argument is present (for convenience)
+private:
+    // Check if help argument is present (internal use)
     bool has_help_request(int argc, const char* argv[]) const {
         std::span<const char* const> args(argv, argc);
         
@@ -299,7 +332,6 @@ public:
         return false;
     }
 
-private:
     // Find short argument character for a long name
     char find_short_for_long(std::string_view long_name) const {
         for (const auto& [key, name] : long_names_) {
@@ -350,6 +382,11 @@ private:
     std::map<char, std::string> long_names_;
     std::set<char> required_;
     std::map<char, std::string> help_;
+    
+    // Stored command line arguments (when using improved constructor)
+    int argc_ = 0;
+    const char** argv_ = nullptr;
+    mutable bool help_was_requested_ = false;
 
 public:
     // Generate help text
@@ -385,12 +422,22 @@ public:
                 result += std::string(24, ' ');
             }
             
-            // Add help text if present
+            // Add help text if present, otherwise show type
             if (help_.contains(arg)) {
                 result += help_.at(arg);
+            } else {
+                // Show type when no help text provided
+                const auto& default_val = defaults_.at(arg);
+                if (std::holds_alternative<int>(default_val)) {
+                    result += "[integer]";
+                } else if (std::holds_alternative<bool>(default_val)) {
+                    result += "[boolean]";
+                } else if (std::holds_alternative<std::string>(default_val)) {
+                    result += "[string]";
+                }
             }
             
-            // Add type information and default value
+            // Add default value
             const auto& default_val = defaults_.at(arg);
             
             if (std::holds_alternative<int>(default_val)) {
