@@ -464,6 +464,8 @@ const auto file = result.value().get<std::string>('f');
 
 ## Building Examples
 
+### Linux/macOS - GCC/Clang
+
 ```bash
 # Using CMake
 mkdir build && cd build
@@ -473,6 +475,28 @@ cmake --build .
 # Manual compilation
 g++ -std=c++23 minimal_sum.cpp -o minimal_sum
 ./minimal_sum -a 10 -b 20
+```
+
+### Windows - Visual Studio (MSVC)
+
+**Note:** Open "Developer Command Prompt for VS" to ensure compiler is in PATH.
+
+```cmd
+REM Using CMake
+mkdir build
+cd build
+cmake ..
+cmake --build . --config Release
+
+REM Run example
+Release\minimal_sum.exe -a 10 -b 20
+```
+
+**Manual compilation:**
+```cmd
+REM Open "Developer Command Prompt for VS" first
+cl /std:c++latest /EHsc minimal_sum.cpp
+minimal_sum.exe -a 10 -b 20
 ```
 
 ## License
